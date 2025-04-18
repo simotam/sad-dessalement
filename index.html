@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAD POUR CHOIX DE PRISE D'EAU DE MER</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>SAD POUR CHOIX DE PRISE D'EAU DE MER</h1>
+    </header>
+    
+    <nav>
+        <ul>
+            <li><a href="#" class="active" data-tab="information">Information général</a></li>
+            <li><a href="#" data-tab="donnees">Données</a></li>
+            <li><a href="#" data-tab="types">Types de Prises d'eau</a></li>
+            <li><a href="#" data-tab="evaluation">Évaluation Environnementale</a></li>
+            <li><a href="#" data-tab="dimensionnement">Dimensionnement</a></li>
+            <li><a href="#" data-tab="cout">Coût</a></li>
+            <li><a href="#" data-tab="notation">Notation et Classement</a></li>
+            <li><a href="#" data-tab="solution">Solution</a></li>
+        </ul>
+    </nav>
+    
+    <main>
+        <!-- Information général -->
+        <section id="information" class="tab-content active">
+            <h2>Information général</h2>
+            
+            <div class="form-group">
+                <label for="site">Le site Choisi :</label>
+                <input type="text" id="site" name="site" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="population">Population :</label>
+                <input type="number" id="population" name="population" readonly>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="changePopulation">
+                    <label for="changePopulation">Changer la population de référence (valider par "Entrée")</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="tauxAccroissement">Taux d'accroissement Moyen :</label>
+                <input type="number" id="tauxAccroissement" name="tauxAccroissement" value="0.02" step="0.001" readonly>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="changeTaux">
+                    <label for="changeTaux">Changer le taux d'accroissement</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="horizon">Horizon d'étude (par défaut) :</label>
+                <input type="number" id="horizon" name="horizon" value="2030" readonly>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="changeHorizon">
+                    <label for="changeHorizon">Changer l'horizon du calcul</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="populationHorizon">Population à l'Horizon d'étude :</label>
+                <input type="number" id="populationHorizon" name="populationHorizon" readonly>
+            </div>
+            
+            <div class="capacity-calculation">
+                <h3>Calcul de la capacité de la prise projetée en m3/j</h3>
+                <p class="formula">La capacité (Eau Brute) = Besoin en AEP x Facteur rendement de la SD (>1)</p>
+                
+                <div class="radio-group">
+                    <p>Avez-vous une valeur de la Capacité demandée ?</p>
+                    <label>
+                        <input type="radio" name="capacityValue" value="no" checked>
+                        Non
+                    </label>
+                    <label>
+                        <input type="radio" name="capacityValue" value="yes">
+                        Oui
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="besoin">Besoin en AEP par an (Calculé) :</label>
+                    <input type="text" id="besoin" name="besoin" readonly>
+                    <small>*Sur la base d'une dotation de consommation de 150L/Hab/Jour</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="facteur">Facteur (Par défaut) :</label>
+                    <input type="number" id="facteur" name="facteur" value="1.5" step="0.1" readonly>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="changeFacteur">
+                        <label for="changeFacteur">Introduire un facteur spécifique</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="capaciteCalcul">Calcul de la Capacité par le SAD :</label>
+                    <input type="text" id="capaciteCalcul" name="capaciteCalcul" readonly>
+                </div>
+                
+                <div class="form-group capacite-manuelle" style="display: none;">
+                    <label for="capaciteManuelle">Entrer la valeur de la capacité :</label>
+                    <input type="number" id="capaciteManuelle" name="capaciteManuelle">
+                    <small>Entrer la valeur en m3/j et Valider par la touche "Entrer"</small>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <h3>Filtrer par région</h3>
+                <select id="regionFilter">
+                    <option value="">Toutes les régions</option>
+                    <!-- Les options seront générées dynamiquement -->
+                </select>
+            </div>
+            
+            <div class="button-group">
+                <button id="changerRegion" class="red-button">CHANGER REGION</button>
+                <button id="rechercherSite" class="blue-button">RECHERCHER SITE</button>
+                <button id="feuillesExcel" class="red-button">FEUILLES EXCEL</button>
+            </div>
+        </section>
+        
+        <!-- Données -->
+        <section id="donnees" class="tab-content">
+            <h2>Données</h2>
+            <p>L'onglet que vous visualisez actuellement affiche les informations générales validées par l'utilisateur précédemment.</p>
+            
+            <div class="form-group">
+                <label for="nombreMailles">Nombre de mailles de la région</label>
+                <input type="text" id="nombreMailles" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="gmNom">Identifiant de région (GM_NOM)</label>
+                <input type="text" id="gmNom" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="distanceVilleLittoral">Distance Ville-Littoral</label>
+                <input type="text" id="distanceVilleLittoral" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="distanceVilleMaille">Distance Ville-Maille</label>
+                <input type="text" id="distanceVilleMaille" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="distanceMailleLittoral">Distance Maille-Littoral</label>
+                <input type="text" id="distanceMailleLittoral" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="topoBathymetrie">Topo-Bathymétrie</label>
+                <input type="text" id="topoBathymetrie" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="typeTopoBathy">Type de profondeur</label>
+                <input type="text" id="typeTopoBathy" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="distanceRoute">Distance route</label>
+                <input type="text" id="distanceRoute" readonly>
+            </div>
+            
+            <div class="button-group">
+                <button id="regionDifferente" class="red-button">REGION DIFFERENTE</button>
+                <button id="feuillesExcel2" class="red-button">FEUILLES EXCEL</button>
+                <button id="genererRapport" class="red-button">GENERER RAPPORT</button>
+            </div>
+        </section>
+        
+        <!-- Types de Prises d'eau -->
+        <section id="types" class="tab-content">
+            <h2>Types de Prises d'eau</h2>
+            <p>Cet onglet répertorie les types de prises possibles pour la région que vous avez sélectionnée au début. Les boutons correspondants s'activent uniquement en fonction des choix de la liste.</p>
+            
+            <div class="form-group">
+                <label for="villeConcernee">La ville concernée:</label>
+                <input type="text" id="villeConcernee" readonly>
+            </div>
+            
+            <div class="radio-group">
+                <p>Préférez-vous un type de prise?</p>
+                <label>
+                    <input type="radio" name="preferenceType" value="no" checked>
+                    Non
+                </label>
+                <label>
+                    <input type="radio" name="preferenceType" value="yes">
+                    Oui
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label for="typePreference">Choisissez le type que vous préférez ici</label>
+                <select id="typePreference" disabled>
+                    <option value="">Sélectionnez un type</option>
+                </select>
+            </div>
+            
+            <div class="prise-types">
+                <p>Cette zone active les boutons correspondants (en vert) uniquement pour les types de prises disponibles dans la région que vous avez sélectionnée.</p>
+                
+                <div class="prise-section">
+                    <div class="prise-title">PRISE DIRECTE</div>
+                    <div class="prise-category">
+                        <div class="category-title">OFF SHORE</div>
+                        <button id="P1" class="prise-button disabled">P1: Au large submersible (dans le fm)</button>
+                        <button id="P2" class="prise-button disabled">P2: Au large submersible (sur le fm)</button>
+                        <button id="P3" class="prise-button disabled">P3: Au large flottante</button>
+                    </div>
+                    <div class="prise-category">
+                        <div class="category-title">ON SHORE</div>
+                        <button id="P4" class="prise-button disabled">P4: Sur rivage direct</button>
+                        <button id="P5" class="prise-button disabled">P5: Sur rivage indirect</button>
+                    </div>
+                </div>
+                
+                <div class="prise-section">
+                    <div class="prise-title">PRISE INDIRECTE</div>
+                    <div class="prise-category">
+                        <div class="category-title">OFF SHORE</div>
+                        <button id="P6" class="prise-button disabled">P6: Puit vertical</button>
+                        <button id="P7" class="prise-button disabled">P7: Puit oblique</button>
+                        <button id="P8" class="prise-button disabled">P8: Puit horizontal</button>
+                    </div>
+                    <div class="prise-category">
+                        <div class="category-title">ON SHORE</div>
+                        <button id="P9" class="prise-button disabled">P9: Puit HDD</button>
+                        <button id="P10" class="prise-button disabled">P10: Galeries d'infiltration</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button id="regionDifferente2" class="red-button">REGION DIFFERENTE</button>
+                <button id="feuillesExcel3" class="red-button">FEUILLES EXCEL</button>
+            </div>
+        </section>
+        
+        <!-- Autres onglets (à développer ultérieurement) -->
+        <section id="evaluation" class="tab-content">
+            <h2>Évaluation Environnementale</h2>
+            <p>Cette section sera développée ultérieurement.</p>
+        </section>
+        
+        <section id="dimensionnement" class="tab-content">
+            <h2>Dimensionnement</h2>
+            <p>Cette section sera développée ultérieurement.</p>
+        </section>
+        
+        <section id="cout" class="tab-content">
+            <h2>Coût</h2>
+            <p>Cette section sera développée ultérieurement.</p>
+        </section>
+        
+        <section id="notation" class="tab-content">
+            <h2>Notation et Classement</h2>
+            <div id="resultatsPrises">
+                <h3>Résultats de l'analyse AHP</h3>
+                <table id="tableauResultats">
+                    <thead>
+                        <tr>
+                            <th>Rang</th>
+                            <th>Type de prise d'eau</th>
+                            <th>Score</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Les résultats seront ajoutés ici dynamiquement -->
+                    </tbody>
+                </table>
+                
+                <button id="exportExcel" class="green-button">Exporter les résultats vers Excel</button>
+                
+                <div class="dashboard">
+                    <h3>Tableau de bord analytique</h3>
+                    <div class="dashboard-charts">
+                        <div class="chart-container">
+                            <h4>Scores par type de prise d'eau</h4>
+                            <canvas id="scoresChart"></canvas>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <h4>Comparaison des facteurs</h4>
+                            <canvas id="factorsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="solution" class="tab-content">
+            <h2>Solution</h2>
+            <p>Cette section présente les détails de la solution recommandée.</p>
+            <div id="solutionRecommandee">
+                <!-- La solution recommandée sera affichée ici -->
+            </div>
+        </section>
+    </main>
+    
+    <!-- Modales -->
+    <!-- Modale pour les détails des prises d'eau -->
+    <div id="priseModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="priseTitle"></h2>
+            <div id="priseDetails"></div>
+            <div id="priseEnvironmental"></div>
+        </div>
+    </div>
+    
+    <!-- Modale pour la recherche de sites -->
+    <div id="searchModal" class="search-modal">
+        <div class="search-modal-content">
+            <span class="close" id="closeSearchModal">&times;</span>
+            <h3>Recherche de sites</h3>
+            <input type="text" id="searchInput" class="search-input" placeholder="Entrez le nom ou l'ID du site">
+            <div id="searchResults" class="search-results"></div>
+            <div class="search-buttons">
+                <button id="cancelSearch" class="red-button">Annuler</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
